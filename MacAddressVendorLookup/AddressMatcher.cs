@@ -35,6 +35,7 @@ namespace MacAddressVendorLookup
 
         public MacVendorInfo FindInfo(PhysicalAddress macAddress)
         {
+            MacVendorInfo savedEntry = null;
             var longBytes = new byte[8];
             var macAddrBytes = macAddress.GetAddressBytes();
             macAddrBytes.CopyTo(longBytes, 0);
@@ -42,6 +43,13 @@ namespace MacAddressVendorLookup
 
             foreach (var dict in _dicts)
             {
+                //    GH-1:  Sub-ranges are being ignored
+                //    There is a bug here where if the identifier is found in the first dictionary (/24 mask) 
+                //    it will not look at any of the other dictionaries
+                //    this example is 18:9B:A5 (IEEE Registration Authority) takes precedence over
+                //                    18:9B:A5:50:00:00/28 (Starfire)
+                //    Because of this bug, IEEE Registration Authority will always be returned
+                
                 int mask = dict.Key;
 
                 var maskedIdent = identifier & (MAX_LONG << (64 - mask));
@@ -49,11 +57,26 @@ namespace MacAddressVendorLookup
                 MacVendorInfo entry;
                 if (dict.Value.TryGetValue(maskedIdent, out entry))
                 {
-                    return entry;
+                    // GH-1: We want to check ALL of the mask dictionaries and pick the entry found with the most specific mask
+                    if (savedEntry is null)
+                    {
+                        savedEntry = entry;
+                    }
+                    else
+                    {
+                        // GH-1: typically the problem will be that IEEE Reg Authority will own the /24,
+                        //       and there will be numerous /28 or /36 entries within
+                        if (savedEntry.MaskLength < entry.MaskLength)
+                        {
+                            savedEntry = entry;
+                        }
+                    }
+                    // return entry;
                 }
             }
 
-            return null;
+            return savedEntry;
+            // return null;
         }
     }
 }
