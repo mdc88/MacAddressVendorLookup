@@ -40,7 +40,19 @@ namespace UnitTests
             {
                 var reader = new MacAddressVendorLookup.WiresharkManufReader();
                 reader.Init(manufTxtFile).Wait();
-                Assert.IsTrue(reader.GetEntries().Count() > 1, "Wireshark Manuf.txt reader did not get any vendor info entries");
+
+                var entryCount = reader.GetEntries().Count();
+                Assert.IsTrue(entryCount > 1, "Wireshark Manuf.txt reader did not get any vendor info entries");
+                // Assert.IsTrue(reader.GetEntries().Count() > 1, "Wireshark Manuf.txt reader did not get any vendor info entries");
+                
+                var addressMatcher = new MacAddressVendorLookup.AddressMatcher(reader);                
+                var stringToSearchFor = "seiko";
+                var tempAddr = PhysicalAddress.Parse("A4D73C30C8AC");  // seiko / 24
+                // var tempAddr = PhysicalAddress.Parse("0080A3C1D1E1");  // Lantronix / 24, a known issue since it doesn't return what it is supposed to
+                
+                var myVendor = addressMatcher.FindInfo(tempAddr);
+                Console.WriteLine($"\n{tempAddr} translate to {myVendor}\n");
+                Assert.IsTrue(myVendor.ToString().Contains(stringToSearchFor, StringComparison.InvariantCultureIgnoreCase), "Vendor didn't contain the expected: " + stringToSearchFor);
             }
         }
 
