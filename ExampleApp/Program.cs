@@ -23,6 +23,8 @@ namespace ExampleApp
                 .Where(ni => ni.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
                 .Where(ni => !ni.GetPhysicalAddress().Equals(System.Net.NetworkInformation.PhysicalAddress.None));
 
+            // var tempAddr = PhysicalAddress.Parse("0080C8C1D1E1");  // D-Link / 24
+            // var tempAddr = PhysicalAddress.Parse("0080A3B1C1D1");  // Lantronix / 24
             // var tempAddr = PhysicalAddress.Parse("40D85504E5A6");  // Honeywell / 36
             // var tempAddr = PhysicalAddress.Parse("189BA550A3A7");  // Starfire / 28
             // var tempAddr = PhysicalAddress.Parse("A4D73C30C8AC");  // seiko / 24
